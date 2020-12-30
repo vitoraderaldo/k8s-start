@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: PersistentVolumeClaim # The claim itself do not create a volume, it's a just a configuration that can be referenced.
+metadata:
+  name: database-persistent-volume-claim
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 2Gi

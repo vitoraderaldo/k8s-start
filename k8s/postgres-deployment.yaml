@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      component: postgres
+  template:
+    metadata:
+      labels:
+        component: postgres
+    spec:
+      volumes:
+        - name: postgres-storage
+          persistentVolumeClaim:
+              claimName: database-persistent-volume-claim
+      containers:
+      - name: postgres
+        image: postgres
+        env: 
+          - name: POSTGRES_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: pgpassword
+                key: PGPASSWORD
+        resources:
+          limits:
+            memory: "128Mi"
+            cpu: "500m"
+        ports:
+        - containerPort: 5432
+        volumeMounts:          
+          - name: postgres-storage # Refers to the Persistent Volume create on line 16
+            mountPath: /var/lib/postgresql/data # When the container tries to access this path, it access the Persisnte Volume
+            subPath: postgres # The folder on the Persistent Volume that will have the files
+            
