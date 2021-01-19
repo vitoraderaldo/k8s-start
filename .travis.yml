@@ -1,0 +1,38 @@
+sudo: required
+services:
+  - docker
+env:
+  global:
+    # Variable that has the commit's hash
+    - SHA=$(git rev-parse HEAD)
+    # Variable that gcloud will use to avoid confirmation from the user
+    - CLOUDSDK_CORE_DISABLE_PROMPTS=1
+before_install:
+  # Decrypt the file with Google Cloud Service Account Credentials
+  - openssl aes-256-cbc -K $encrypted_2167efd8b152_key -iv $encrypted_2167efd8b152_iv -in gcloud-creds.json.enc -out gcloud-creds.json -d
+  # Install Google Cloud CLI
+  - curl https://sdk.cloud.google.com | bash > /dev/null;
+  - source $HOME/google-cloud-sdk/path.bash.inc
+  # Install Kubectl
+  - gcloud components update kubectl
+  # Authenticate on Google Cloud
+  - gcloud auth activate-service-account --key-file gcloud-creds.json
+  # Set the project, zone and cluster
+  - gcloud config set project fibonacci-301722
+  # - gcloud config set compute/zone southamerica-east1-a
+  #- gcloud container clusters get-credentials fibonacci-cluster
+  - gcloud container clusters get-credentials fibonacci-cluster --zone southamerica-east1-a
+  # Login into Docker
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+  # Buld image to run the tests
+  - docker build -t vitor96k/client-testing -f ./client/Dockerfile.dev ./client
+
+script:
+  # Run the container that will run the tests
+  - docker run -e CI=true vitor96k/client-testing npm test
+
+deploy:
+  provider: script
+  script: bash ./deploy.sh
+  on:
+    branch: master
