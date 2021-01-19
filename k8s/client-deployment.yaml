@@ -14,10 +14,6 @@ spec:
     spec:
       containers:
       - name: client
-        image: vitor96k/multi-client
-        resources:
-          limits:
-            memory: "128Mi"
-            cpu: "500m"
+        image: vitor96k/multi-client        
         ports:
         - containerPort: 3000
